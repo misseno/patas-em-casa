@@ -47,7 +47,12 @@ export function Navbar() {
         </button>
       </motion.nav>
 
-      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
+      <AuthModal 
+        isOpen={authOpen} 
+        onClose={() => setAuthOpen(false)} 
+        onLoginSuccess={() => setAuthOpen(false)}
+        onGuestSuccess={() => setAuthOpen(false)}
+      />
     </>
   );
 }
