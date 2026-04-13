@@ -39,18 +39,26 @@ export const ReunionMap: React.FC<ReunionMapProps> = ({ pet, onClose }) => {
   const [messages, setMessages] = useState<string[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // Coordenadas simuladas para o reencontro (Porto, Portugal)
-  const userPos: [number, number] = [41.1585, -8.6270];
-  const petPos: [number, number] = [41.1620, -8.6220];
-  const centerPos: [number, number] = [41.1600, -8.6245];
+  // Coordenadas dinâmicas
+  const [userPos, setUserPos] = useState<[number, number] | null>(null);
+  const petPos: [number, number] = [pet.location.lat, pet.location.lng];
+  
+  // Buscar posição do usuário no mapa
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setUserPos([pos.coords.latitude, pos.coords.longitude]),
+      () => setUserPos([petPos[0] - 0.005, petPos[1] - 0.005]) // Fallback próximo se falhar
+    );
+  }, []);
 
   const communityMessages = useMemo(() => [
-    "Vamos lá, Tobias!", "Que alegria!", "A torcida está com você!", "Heróis em ação! ❤️",
+    "Vamos lá!", "Que alegria!", "A torcida está com você!", "Heróis em ação! ❤️",
     "Estou emocionado!", "O amor vence tudo."
   ], []);
 
   // Buscar rota real usando as ruas (OSRM API - Gratuito)
   const fetchRoute = async () => {
+    if (!userPos) return;
     try {
       const response = await fetch(
         `https://router.project-osrm.org/route/v1/driving/${userPos[1]},${userPos[0]};${petPos[1]},${petPos[0]}?overview=full&geometries=geojson`
@@ -58,12 +66,11 @@ export const ReunionMap: React.FC<ReunionMapProps> = ({ pet, onClose }) => {
       const data = await response.json();
       if (data.routes && data.routes[0]) {
         // Converter de [lng, lat] para [lat, lng] (Leaflet padrão)
-        const coords = data.routes[0].geometry.coordinates.map((c: any) => [c[1], c[0]]);
+        const coords = data.routes[0].geometry.coordinates.map((c: number[]) => [c[1], c[0]]);
         setRouteCoords(coords);
-        setShowPath(true);
       }
-    } catch (error) {
-      console.error("Erro ao traçar rota real:", error);
+    } catch (err) {
+      console.error('Erro na rota OSRM:', err);
       // Fallback para linha reta se a API falhar
       setRouteCoords([userPos, petPos]);
       setShowPath(true);
@@ -71,7 +78,8 @@ export const ReunionMap: React.FC<ReunionMapProps> = ({ pet, onClose }) => {
   };
 
   useEffect(() => {
-    fetchRoute();
+    if (userPos) fetchRoute();
+    
     const heartInterval = setInterval(() => {
       setHearts(prev => [...prev.slice(-20), { id: Date.now(), x: Math.random() * 100 }]);
       setCommunityCount(c => c + (Math.random() > 0.8 ? 1 : 0));
@@ -84,9 +92,12 @@ export const ReunionMap: React.FC<ReunionMapProps> = ({ pet, onClose }) => {
        }
     }, 2500);
     
-    setTimeout(() => setShowPath(true), 800);
+    if (userPos) {
+      setTimeout(() => setShowPath(true), 800);
+    }
+    
     return () => { clearInterval(heartInterval); clearInterval(msgInterval); };
-  }, [communityMessages]);
+  }, [userPos, communityMessages]);
 
   const userIcon = L.divIcon({
     className: 'custom-icon',
@@ -120,7 +131,7 @@ export const ReunionMap: React.FC<ReunionMapProps> = ({ pet, onClose }) => {
     >
       {/* MAPA (FUNDAÇÃO) */}
       <div className="relative flex-1 h-full bg-[#E5E2D9]">
-        <MapContainer center={centerPos} zoom={15} zoomControl={false} className="absolute inset-0 w-full h-full">
+        <MapContainer center={petPos} zoom={15} zoomControl={false} className="absolute inset-0 w-full h-full">
           <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
           {showPath && routeCoords.length > 0 && (
             <Polyline 
