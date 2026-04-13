@@ -279,7 +279,7 @@ const DonateStep4 = React.memo(({ data, onClose, THEME }: any) => (
 // ==========================================
 // FLUXO: DOAR (CADASTRAR PET)
 // ==========================================
-function FlowDonate({ setFlow, onClose, onSuccess }: { setFlow: (f: FlowType) => void; onClose: () => void; onSuccess?: () => void }) {
+function FlowDonate({ setFlow, onClose, onSuccess, userId }: { setFlow: (f: FlowType) => void; onClose: () => void; onSuccess?: () => void; userId?: string }) {
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [data, setData] = useState<DonateFormData>({
@@ -294,7 +294,7 @@ function FlowDonate({ setFlow, onClose, onSuccess }: { setFlow: (f: FlowType) =>
     try {
       const { fotos, ...rest } = data;
       await PetService.create({
-        owner_id: 'donor-id-mock',
+        owner_id: userId || '00000000-0000-0000-0000-000000000000',
         type: 'adopt',
         name: rest.nome,
         breed: rest.raca,
@@ -443,7 +443,7 @@ function FlowAdopt({ setFlow, onClose }: { setFlow: (f: FlowType) => void; onClo
 // ==========================================
 // MODAL PRINCIPAL ROOT
 // ==========================================
-export function AdoptPetModal({ isOpen, onClose, onSuccess }: { isOpen: boolean; onClose: () => void; onSuccess?: () => void }) {
+export function AdoptPetModal({ isOpen, onClose, onSuccess, userId }: { isOpen: boolean; onClose: () => void; onSuccess?: () => void; userId?: string }) {
   const [flow, setFlow] = useState<FlowType>('none');
 
   const handleClose = () => {
@@ -502,7 +502,7 @@ export function AdoptPetModal({ isOpen, onClose, onSuccess }: { isOpen: boolean;
             </div>
           )}
 
-          {flow === 'donate' && <FlowDonate setFlow={setFlow} onClose={handleClose} onSuccess={onSuccess} />}
+          {flow === 'donate' && <FlowDonate setFlow={setFlow} onClose={handleClose} onSuccess={onSuccess} userId={userId} />}
           {flow === 'adopt' && <FlowAdopt setFlow={setFlow} onClose={handleClose} />}
         </div>
       </div>

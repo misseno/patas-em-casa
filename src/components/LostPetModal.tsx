@@ -31,6 +31,7 @@ interface LostPetModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  userId?: string;
 }
 
 const CORES_OPCOES = ['Preto', 'Branco', 'Marrom', 'Amarelo', 'Caramelo', 'Cinza', 'Malhado', 'Ruivo'];
@@ -664,7 +665,7 @@ const STEP_TITLES = [
 ];
 
 // --- COMPONENTE PRINCIPAL ---
-export function LostPetModal({ isOpen, onClose, onSuccess }: LostPetModalProps) {
+export function LostPetModal({ isOpen, onClose, onSuccess, userId }: LostPetModalProps) {
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [data, setData] = useState<FormData>({
@@ -679,7 +680,7 @@ export function LostPetModal({ isOpen, onClose, onSuccess }: LostPetModalProps) 
       try {
         const { fotos, ...rest } = data;
         await PetService.create({
-          owner_id: 'user-id-mock',
+          owner_id: userId || '00000000-0000-0000-0000-000000000000', // Default guest UUID
           type: 'lost',
           name: rest.nome,
           breed: rest.raca,

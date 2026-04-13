@@ -31,6 +31,7 @@ interface FoundPetModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  userId?: string;
 }
 
 const CORES_OPCOES = ['Preto', 'Branco', 'Marrom', 'Amarelo', 'Caramelo', 'Cinza', 'Malhado', 'Ruivo'];
@@ -301,7 +302,7 @@ function Step4({ onClose }: any) {
 const STEP_TITLES = ['Quem você encontrou?', 'Fotos e Detalhes', 'Onde ele está?', 'Obrigado Herói!'];
 
 // --- COMPONENTE PRINCIPAL ---
-export function FoundPetModal({ isOpen, onClose, onSuccess }: FoundPetModalProps) {
+export function FoundPetModal({ isOpen, onClose, onSuccess, userId }: FoundPetModalProps) {
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [data, setData] = useState<FormData>({ nome: '', especie: '', raca: '', racaNaoSei: false, idade: '', sexo: '', cores: [], detalhesColeira: '', fotos: [], comportamento: '', localizacaoTipo: 'gps', enderecoManual: '', gpsLng: null, gpsEndereco: '', abrigoTipo: 'comigo', abrigoDetalhes: '' });
@@ -312,7 +313,7 @@ export function FoundPetModal({ isOpen, onClose, onSuccess }: FoundPetModalProps
       try {
         const { fotos, ...rest } = data;
         await PetService.create({ 
-          owner_id: 'hero-id-mock', 
+          owner_id: userId || '00000000-0000-0000-0000-000000000000', 
           type: 'found', 
           name: rest.nome || 'Pet Encontrado', 
           breed: rest.raca, 

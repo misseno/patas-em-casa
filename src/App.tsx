@@ -292,9 +292,9 @@ const App: React.FC = () => {
         onLogin={() => setShowAuth(true)} 
         onGuest={handleGuestEntry}
       />
-      <LostPetModal isOpen={showLostModal} onClose={() => setShowLostModal(false)} onSuccess={handleActionSuccess} />
-      <FoundPetModal isOpen={showFoundModal} onClose={() => setShowFoundModal(false)} onSuccess={handleActionSuccess} />
-      <AdoptPetModal isOpen={showAdoptModal} onClose={() => setShowAdoptModal(false)} onSuccess={handleActionSuccess} />
+      <LostPetModal isOpen={showLostModal} onClose={() => setShowLostModal(false)} onSuccess={handleActionSuccess} userId={currentUser?.id} />
+      <FoundPetModal isOpen={showFoundModal} onClose={() => setShowFoundModal(false)} onSuccess={handleActionSuccess} userId={currentUser?.id} />
+      <AdoptPetModal isOpen={showAdoptModal} onClose={() => setShowAdoptModal(false)} onSuccess={handleActionSuccess} userId={currentUser?.id} />
 
       <AnimatePresence>
         {showReunionMap && selectedPet && (
