@@ -49,9 +49,14 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, onGuestSuccess }: A
   const [regPassword, setRegPassword] = useState("");
   const [regConfirm, setRegConfirm] = useState("");
   const [regPhoto, setRegPhoto] = useState<string | null>(null);
+  const [hasConsented, setHasConsented] = useState(false);
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!hasConsented) {
+      alert("Por favor, autorize o uso confidencial dos dados para continuar.");
+      return;
+    }
     setLoading(true);
     // Simulação de login por email
     setTimeout(() => {
@@ -66,6 +71,10 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, onGuestSuccess }: A
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!hasConsented) {
+      alert("Por favor, autorize o uso confidencial dos dados para criar sua conta.");
+      return;
+    }
     if (regPassword !== regConfirm) {
       alert("As senhas não coincidem.");
       return;
@@ -259,10 +268,25 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, onGuestSuccess }: A
                         </div>
                       </div>
 
+                      <div className="flex items-start gap-3 p-4 bg-white rounded-2xl border border-black/5 shadow-inner mt-2">
+                        <div className="flex items-center h-5">
+                          <input
+                            id="consent-login"
+                            type="checkbox"
+                            checked={hasConsented}
+                            onChange={(e) => setHasConsented(e.target.checked)}
+                            className="w-4 h-4 rounded border-gray-300 text-[#CC5833] focus:ring-[#CC5833]"
+                          />
+                        </div>
+                        <label htmlFor="consent-login" className="text-[10px] text-[#2E4036]/60 leading-relaxed cursor-pointer font-medium">
+                          <span className="font-black text-[#2E4036] uppercase tracking-tighter">Compromisso Ético:</span> Autorizo o uso confidencial dos meus dados para fins exclusivos de proteção e reencontro animal conforme a <span className="text-[#CC5833] font-bold">Privacidade Jobs Standard</span>.
+                        </label>
+                      </div>
+
                       <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-4 rounded-xl bg-[#2E4036] text-white font-bold flex items-center justify-center gap-2 hover:bg-[#1A261F] transition-all shadow-lg shadow-[#2E4036]/10"
+                        className="w-full py-4 rounded-xl bg-[#2E4036] text-white font-bold flex items-center justify-center gap-2 hover:bg-[#1A261F] transition-all shadow-lg shadow-[#2E4036]/10 disabled:opacity-50"
                       >
                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Entrar na conta"}
                         {!loading && <ArrowRight className="w-4 h-4" />}
@@ -355,6 +379,21 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, onGuestSuccess }: A
                             }`}
                           />
                         </div>
+                      </div>
+
+                      <div className="flex items-start gap-3 p-4 bg-white rounded-2xl border border-black/5 shadow-inner mt-2">
+                        <div className="flex items-center h-5">
+                          <input
+                            id="consent-reg"
+                            type="checkbox"
+                            checked={hasConsented}
+                            onChange={(e) => setHasConsented(e.target.checked)}
+                            className="w-4 h-4 rounded border-gray-300 text-[#CC5833] focus:ring-[#CC5833]"
+                          />
+                        </div>
+                        <label htmlFor="consent-reg" className="text-[10px] text-[#2E4036]/60 leading-relaxed cursor-pointer font-medium">
+                          <span className="font-black text-[#2E4036] uppercase tracking-tighter">Compromisso Ético:</span> Autorizo o uso confidencial dos meus dados para proteger a comunidade conforme a <span className="text-[#CC5833] font-bold">Privacidade Jobs Standard</span>.
+                        </label>
                       </div>
 
                       <button

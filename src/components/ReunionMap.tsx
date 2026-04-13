@@ -246,13 +246,22 @@ export const ReunionMap: React.FC<ReunionMapProps> = ({ pet, onClose }) => {
 
             {/* BARRA DE AÇÕES (FIXA NA BASE DA SIDEBAR) */}
             <div className="p-8 md:p-12 bg-white/80 backdrop-blur-xl border-t border-black/5 grid grid-cols-4 gap-3">
-               <button className="col-span-2 py-6 rounded-[2rem] bg-[#2E4036] text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-xl hover:scale-[1.03] active:scale-95 transition-all flex items-center justify-center gap-2">
+               <button 
+                 onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&origin=${userPos[0]},${userPos[1]}&destination=${petPos[0]},${petPos[1]}`, '_blank')}
+                 className="col-span-2 py-6 rounded-[2rem] bg-[#2E4036] text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-xl hover:scale-[1.03] active:scale-95 transition-all flex items-center justify-center gap-2"
+               >
                   Traçar Rota <CornerUpRight size={16} />
                </button>
-               <button className="w-full py-6 rounded-[2rem] bg-[#F2F0E9] text-[#2E4036] flex items-center justify-center hover:bg-[#CC5833] hover:text-white transition-all">
+               <button 
+                 onClick={() => window.open(`https://wa.me/5511999999999?text=Olá Ricardo, estou a caminho para buscar o ${pet.name}!`, '_blank')}
+                 className="w-full py-6 rounded-[2rem] bg-[#F2F0E9] text-[#2E4036] flex items-center justify-center hover:bg-[#CC5833] hover:text-white transition-all shadow-sm"
+               >
                   <MessageCircle size={20} />
                </button>
-               <button className="w-full py-6 rounded-[2rem] bg-[#F2F0E9] text-[#2E4036] flex items-center justify-center hover:bg-[#CC5833] hover:text-white transition-all">
+               <button 
+                 onClick={() => window.open('tel:+5511999999999')}
+                 className="w-full py-6 rounded-[2rem] bg-[#F2F0E9] text-[#2E4036] flex items-center justify-center hover:bg-[#CC5833] hover:text-white transition-all shadow-sm"
+               >
                   <Phone size={20} />
                </button>
             </div>
