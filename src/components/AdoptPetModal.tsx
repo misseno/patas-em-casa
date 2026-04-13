@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, ArrowRight, ArrowLeft, Camera, Heart, Search, CheckCircle2, AlertCircle, Syringe, Sparkles, Loader2
+  X, ArrowRight, ArrowLeft, Camera, Heart, Search, CheckCircle2, AlertCircle, Syringe, Sparkles, Loader2, Share2
 } from 'lucide-react';
 import { PetService } from '../lib/PetService';
 import { BreedSelector } from './BreedSelector';
