@@ -17,13 +17,13 @@ const overlayVariants = {
   visible: { opacity: 1 },
 };
 
-const modalVariants = {
+const modalVariants: any = {
   hidden: { opacity: 0, scale: 0.94, y: 24 },
   visible: { 
     opacity: 1, 
     scale: 1, 
     y: 0, 
-    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as any } 
+    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } 
   },
   exit: { 
     opacity: 0, 
