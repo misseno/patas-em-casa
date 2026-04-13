@@ -80,6 +80,7 @@ const App: React.FC = () => {
   const [showReunionMap, setShowReunionMap] = useState(false);
   const [isMapView, setIsMapView] = useState(false);
   const [isGuestMode, setIsGuestMode] = useState(false);
+  const [pets, setPets] = useState<any[]>(MOCK_PETS);
 
   const isLoggedIn = !!currentUser;
 
@@ -97,6 +98,33 @@ const App: React.FC = () => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Carregar dados reais do Supabase
+  useEffect(() => {
+    const loadPets = async () => {
+      try {
+        const data = await PetService.getAll();
+        if (data && data.length > 0) {
+          const mapped = data.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            breed: p.breed,
+            status: p.type === 'lost' ? 'lost' : p.type === 'found' ? 'found' : 'adopt',
+            loc: p.location.address,
+            time: 'Agora', // Idealmente calcular tempo relativo
+            img: p.images[0] || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80',
+            desc: p.description,
+            especie: p.species,
+            porte: 'Médio' // Adicionar ao schema se necessário
+          }));
+          setPets(mapped);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar do Supabase:', err);
+      }
+    };
+    loadPets();
   }, []);
 
   // --- HANDLERS ---
@@ -390,7 +418,7 @@ const App: React.FC = () => {
             
             {!isMapView ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                {MOCK_PETS
+                {pets
                   .filter(p => filter === 'all' || p.status === filter)
                   .filter(p => filterEspecie === 'all' || p.especie === filterEspecie)
                   .map(pet => (
@@ -444,7 +472,7 @@ const App: React.FC = () => {
                        Clique em um pet para ver a rota mágica de reencontro com trilha da comunidade.
                     </p>
                     <div className="flex gap-4">
-                       {MOCK_PETS.slice(0, 3).map(p => (
+                       {pets.slice(0, 3).map(p => (
                           <button 
                             key={p.id}
                             onClick={() => { setSelectedPet(p); setShowReunionMap(true); }}
