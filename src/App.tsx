@@ -7,6 +7,7 @@ import { AuthModal } from './components/AuthModal';
 import { HeroesCarousel } from './components/HeroesCarousel';
 import { GateModal } from './components/GateModal';
 import { ReunionMap } from './components/ReunionMap';
+import { MapContainer, TileLayer } from 'react-leaflet';
 import { NotificationToast, type Notification } from './components/NotificationToast';
 import { 
   Heart, 
@@ -422,14 +423,19 @@ const App: React.FC = () => {
               </div>
             ) : (
               <div className="h-[600px] w-full bg-white rounded-[3rem] overflow-hidden border border-black/5 relative shadow-inner">
-                 <div 
-                  className="absolute inset-0 opacity-20 grayscale"
-                  style={{ 
-                    backgroundImage: `url('https://api.mapbox.com/styles/v1/mapbox/light-v10/static/auto/1200x800?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}')`,
-                    backgroundSize: 'cover'
-                  }}
-                 />
-                 <div className="absolute inset-0 flex items-center justify-center flex-col text-center p-12">
+                 <div className="absolute inset-0 z-0">
+                  <MapContainer 
+                    center={[-23.5505, -46.6333]} 
+                    zoom={13} 
+                    zoomControl={false}
+                    className="w-full h-full grayscale-[0.5] opacity-40"
+                    scrollWheelZoom={false}
+                    dragging={false}
+                  >
+                    <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
+                  </MapContainer>
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center flex-col text-center p-12">
                     <div className="w-20 h-20 rounded-full bg-[#CC5833] flex items-center justify-center text-white mb-6 animate-pulse">
                        <MapPin size={40} />
                     </div>

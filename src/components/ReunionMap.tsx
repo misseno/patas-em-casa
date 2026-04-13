@@ -14,6 +14,12 @@ import {
   ShieldCheck
 } from 'lucide-react';
 
+import { MapContainer, TileLayer, Marker, Polyline, ZoomControl } from 'react-leaflet';
+import L from 'leaflet';
+
+// Fix para ícones do Leaflet (necessário no React)
+import 'leaflet/dist/leaflet.css';
+
 interface ReunionMapProps {
   pet: {
     id: number;
@@ -31,6 +37,11 @@ export const ReunionMap: React.FC<ReunionMapProps> = ({ pet, onClose }) => {
   const [communityCount, setCommunityCount] = useState(124);
   const [messages, setMessages] = useState<string[]>([]);
 
+  // Coordenadas simuladas para o reencontro (Porto, Portugal)
+  const userPos: [number, number] = [41.1585, -8.6270];
+  const petPos: [number, number] = [41.1620, -8.6220];
+  const centerPos: [number, number] = [41.1600, -8.6245];
+
   const communityMessages = useMemo(() => [
     "Vamos lá, Tobias!",
     "Que alegria!",
@@ -42,7 +53,7 @@ export const ReunionMap: React.FC<ReunionMapProps> = ({ pet, onClose }) => {
     "O amor vence tudo."
   ], []);
 
-  // Simular corações e mensagens da comunidade (Vibe Steve Jobs: "It's alive")
+  // Simular corações e mensagens da comunidade
   useEffect(() => {
     const heartInterval = setInterval(() => {
       setHearts(prev => [...prev.slice(-15), { id: Date.now(), x: Math.random() * 100 }]);
@@ -64,6 +75,31 @@ export const ReunionMap: React.FC<ReunionMapProps> = ({ pet, onClose }) => {
     };
   }, [communityMessages]);
 
+  const userIcon = L.divIcon({
+    className: 'custom-icon',
+    html: `<div class="relative">
+             <div class="w-16 h-16 rounded-[1.5rem] border-[3px] border-white shadow-2xl overflow-hidden bg-[#2E4036] flex items-center justify-center">
+                <span class="text-white font-black text-[10px] uppercase tracking-tighter">Você</span>
+             </div>
+             <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rotate-45 shadow-lg"></div>
+           </div>`,
+    iconSize: [64, 64],
+    iconAnchor: [32, 64],
+  });
+
+  const petIcon = L.divIcon({
+    className: 'custom-icon',
+    html: `<div class="relative">
+             <div class="absolute inset-0 bg-[#CC5833]/20 rounded-full animate-ping scale-150"></div>
+             <div class="w-24 h-24 rounded-[2rem] border-[4px] border-[#CC5833] shadow-2xl overflow-hidden bg-white ring-8 ring-white/30">
+                <img src="${pet.img}" class="w-full h-full object-cover" alt="Pet" />
+             </div>
+             <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#CC5833] rotate-45 shadow-lg"></div>
+           </div>`,
+    iconSize: [96, 96],
+    iconAnchor: [48, 96],
+  });
+
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 1.1 }}
@@ -74,70 +110,43 @@ export const ReunionMap: React.FC<ReunionMapProps> = ({ pet, onClose }) => {
     >
       {/* MAP SIDE */}
       <div className="relative flex-1 bg-[#E5E2D9] overflow-hidden">
-        {/* Placeholder de Mapa Premium */}
-        <div 
-          className="absolute inset-0 opacity-40 grayscale-[0.2] contrast-[1.1]"
-          style={{ 
-            backgroundImage: `url('https://api.mapbox.com/styles/v1/mapbox/light-v10/static/auto/1200x800?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            filter: 'sepia(0.2) saturate(0.8)'
-          }}
-        />
-
-        {/* SVG Route Visualization */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none">
-          <AnimatePresence>
-            {showPath && (
-              <motion.path
-                d="M 250 550 C 400 450, 450 350, 750 250" 
-                fill="transparent"
-                stroke="#CC5833"
-                strokeWidth="6"
-                strokeLinecap="round"
-                initial={{ pathLength: 0, opacity: 0, strokeDasharray: "1, 15" }}
-                animate={{ pathLength: 1, opacity: 1, strokeDasharray: "10, 15" }}
-                transition={{ duration: 4, ease: "easeInOut" }}
-              />
-            )}
-          </AnimatePresence>
-        </svg>
-
-        {/* PINS */}
-        <motion.div 
-          initial={{ scale: 0, y: 20 }}
-          animate={{ scale: 1, y: 0 }}
-          transition={{ delay: 0.5, type: 'spring', damping: 15 }}
-          className="absolute left-[220px] top-[520px] group cursor-pointer"
+        
+        <MapContainer 
+          center={centerPos} 
+          zoom={15} 
+          zoomControl={false}
+          className="absolute inset-0 w-full h-full"
+          style={{ background: '#F2F0E9' }}
         >
-          <div className="relative group-hover:scale-110 transition-transform">
-             <div className="w-16 h-16 rounded-[1.5rem] border-[3px] border-white shadow-2xl overflow-hidden bg-[#2E4036] flex items-center justify-center">
-                <span className="text-white font-black text-[10px] uppercase tracking-tighter">Você</span>
-             </div>
-             <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rotate-45 shadow-lg" />
-          </div>
-        </motion.div>
+          <TileLayer
+            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+          />
+          
+          <ZoomControl position="bottomleft" />
 
-        <motion.div 
-          initial={{ scale: 0, y: 20 }}
-          animate={{ scale: 1, y: 0 }}
-          transition={{ delay: 1, type: 'spring', damping: 12 }}
-          className="absolute right-[220px] top-[220px] group cursor-pointer"
-        >
-          <div className="relative group-hover:scale-110 transition-transform">
-             <div className="absolute inset-0 bg-[#CC5833]/20 rounded-full animate-ping scale-150" />
-             <div className="w-24 h-24 rounded-[2rem] border-[4px] border-[#CC5833] shadow-2xl overflow-hidden bg-white ring-8 ring-white/30">
-                <img src={pet.img} className="w-full h-full object-cover" alt="Pet" />
-             </div>
-             <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#CC5833] rotate-45 shadow-lg" />
-             
-             <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-[#CC5833] text-white px-6 py-2.5 rounded-full shadow-2xl whitespace-nowrap">
-                <p className="text-[10px] font-black uppercase mb-0.5 flex items-center gap-2">
-                  <ShieldCheck size={12} /> {pet.name} PROTEGIDO
-                </p>
-             </div>
-          </div>
-        </motion.div>
+          {showPath && (
+            <Polyline 
+              positions={[userPos, petPos]} 
+              color="#CC5833" 
+              weight={6} 
+              dashArray="10, 15"
+              opacity={0.8}
+            />
+          )}
+
+          <Marker position={userPos} icon={userIcon} />
+          <Marker position={petPos} icon={petIcon} />
+        </MapContainer>
+
+        {/* Marcador flutuante de nome (sobre o mapa) */}
+        <div className="absolute right-[220px] top-[220px] pointer-events-none z-[500]">
+           <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-[#CC5833] text-white px-6 py-2.5 rounded-full shadow-2xl whitespace-nowrap">
+              <p className="text-[10px] font-black uppercase mb-0.5 flex items-center gap-2">
+                <ShieldCheck size={12} /> {pet.name} PROTEGIDO
+              </p>
+           </div>
+        </div>
 
         {/* COMMUNITY VIBE (FLOATING) */}
         <div className="absolute bottom-10 right-10 flex flex-col items-center">
