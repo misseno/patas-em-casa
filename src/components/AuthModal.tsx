@@ -84,29 +84,24 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, onGuestSuccess }: A
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const response: any = await AuthService.signInWithGoogle();
-      const { data, error } = response;
+      const { error } = await AuthService.signInWithGoogle();
       if (error) throw error;
-      setRegName(data.user.user_metadata.full_name);
-      setRegEmail(data.user.email);
-      setRegPhoto(data.user.user_metadata.avatar_url);
-      setTab("completing");
+      // O Supabase redirecionará, o tratamento do retorno é feito pelo no useEffect do App.tsx
     } catch (err) {
-      alert("Erro no login social");
-    } finally {
+      alert("Erro no login com Google");
       setLoading(false);
     }
   };
 
   const handleFacebookLogin = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setRegName("Herói Samaritano");
-      setRegEmail("usuario@facebook.com");
-      setRegPhoto("https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop");
-      setTab("completing");
+    try {
+      const { error } = await AuthService.signInWithFacebook();
+      if (error) throw error;
+    } catch (err) {
+      alert("Erro no login com Facebook");
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const handleFinishSocial = () => {
@@ -206,13 +201,23 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, onGuestSuccess }: A
                   {tab === "completing" && (
                     <div className="flex flex-col gap-6 text-center">
                       <div className="relative w-24 h-24 mx-auto">
-                        <img src={regPhoto || ""} className="w-full h-full rounded-[2rem] object-cover shadow-lg border-4 border-white" alt="Perfil" />
+                        <img 
+                          src={regPhoto || AuthService.getBeautifulAvatar(regName || regEmail)} 
+                          className="w-full h-full rounded-[2rem] object-cover shadow-lg border-4 border-white" 
+                          alt="Perfil" 
+                        />
                         <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-[#06D6A0] rounded-full flex items-center justify-center text-white border-2 border-white"><Heart size={14} fill="white" /></div>
                       </div>
                       <div className="space-y-4">
-                        <div className="text-left space-y-1"><label className="text-[10px] font-black uppercase opacity-30 ml-4">Nome no sistema</label><input value={regName} onChange={e => setRegName(e.target.value)} className="w-full px-6 py-4 rounded-2xl bg-white border border-black/5 font-bold outline-none" /></div>
+                        <div className="text-left space-y-1">
+                          <label className="text-[10px] font-black uppercase opacity-30 ml-4">Nome no sistema</label>
+                          <input value={regName} onChange={e => setRegName(e.target.value)} className="w-full px-6 py-4 rounded-2xl bg-white border border-black/5 font-bold outline-none" />
+                        </div>
                         <PrivacyCheckbox checked={hasConsented} onChange={setHasConsented} />
                       </div>
+                      <p className="text-[10px] text-[#2E4036]/40 leading-tight">
+                        {regPhoto ? "Usando sua foto do perfil social" : "Criamos um avatar exclusivo para você"}
+                      </p>
                       <button onClick={handleFinishSocial} className="w-full py-4 rounded-full bg-[#06D6A0] text-[#2E4036] font-black text-sm shadow-xl">Começar minha Jornada 🐾</button>
                     </div>
                   )}

@@ -9,6 +9,9 @@ import { GateModal } from './components/GateModal';
 import { ReunionMap } from './components/ReunionMap';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import { NotificationToast, type Notification } from './components/NotificationToast';
+import { PetService } from './lib/PetService';
+import { AuthService } from './lib/AuthService';
+import { supabase } from './lib/supabase';
 import { 
   Heart, 
   Search, 
@@ -127,6 +130,52 @@ const App: React.FC = () => {
     loadPets();
   }, []);
 
+  // Monitorar Autenticação Real do Supabase
+  useEffect(() => {
+    // 1. Verificar sessão atual no carregamento
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const user = session.user;
+        setCurrentUser({
+          id: user.id,
+          full_name: user.user_metadata.full_name || 'Herói Anônimo',
+          email: user.email,
+          avatar_url: user.user_metadata.avatar_url,
+          points: 150 // Base inicial
+        });
+        setHasPassedGate(true);
+      }
+    });
+
+    // 2. Escutar mudanças (Login, Logout, Redirect do Google)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const user = session.user;
+        const isNewUser = _event === 'SIGNED_IN' && !currentUser;
+        
+        setCurrentUser({
+          id: user.id,
+          full_name: user.user_metadata.full_name || 'Herói Anônimo',
+          email: user.email,
+          avatar_url: user.user_metadata.avatar_url,
+          points: 150
+        });
+
+        if (isNewUser) {
+           addNotification({ 
+            title: `Seja bem-vindo!`, 
+            message: 'Estamos preparando seu perfil de herói.', 
+            type: 'success' 
+          });
+        }
+      } else {
+        setCurrentUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   // --- HANDLERS ---
   const handleLoginSuccess = (user: any) => {
     setCurrentUser(user);
@@ -135,7 +184,7 @@ const App: React.FC = () => {
     setHasPassedGate(true);
     addNotification({ 
       title: `Olá, ${user.full_name.split(' ')[0]}!`, 
-      message: 'Seu login foi validado com sucesso.', 
+      message: 'Sua identidade foi validada com sucesso.', 
       type: 'success' 
     });
   };
