@@ -19,10 +19,11 @@ interface FormData {
   detalhesColeira: string;
   fotos: File[];
   comportamento: string;
-  localizacaoTipo: 'gps' | 'manual';
-  enderecoManual: string;
+  gpsLat: number | null;
   gpsLng: number | null;
   gpsEndereco: string;
+  localizacaoTipo: 'gps' | 'manual';
+  enderecoManual: string;
   abrigoTipo: 'comigo' | 'ong' | 'rua';
   abrigoDetalhes: string;
 }
@@ -262,22 +263,109 @@ const Step2 = React.memo(Step2Base);
 
 // --- ETAPA 3 ---
 function Step3Base({ data, setData, onNext, onBack, isSubmitting }: any) {
+  const [isFetchingGps, setIsFetchingGps] = useState(false);
+  const [gpsError, setGpsError] = useState<string | null>(null);
+
+  const fetchGPS = () => {
+    setIsFetchingGps(true);
+    setGpsError(null);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setData((d: any) => ({ ...d, gpsLat: latitude, gpsLng: longitude, localizacaoTipo: 'gps' }));
+        
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          const json = await res.json();
+          const addr = json.display_name || "Localização via GPS";
+          setData((d: any) => ({ ...d, gpsEndereco: addr, enderecoManual: addr }));
+        } catch {
+          setData((d: any) => ({ ...d, gpsEndereco: "Localização capturada" }));
+        } finally {
+          setIsFetchingGps(false);
+        }
+      },
+      (err) => {
+        setIsFetchingGps(false);
+        setGpsError("Não conseguimos acessar seu GPS. Por favor, digite o endereço abaixo.");
+        setData((d: any) => ({ ...d, localizacaoTipo: 'manual' }));
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  useEffect(() => {
+    if (!data.gpsLat && data.localizacaoTipo === 'gps') {
+      fetchGPS();
+    }
+  }, []);
+
   return (
     <div className="space-y-6">
-      <Field label="Onde ele está agora?">
+      <Field label="Onde o pet está agora?">
+         <div className="flex p-1 bg-[#F2F0E9] rounded-2xl mb-4">
+            <button 
+              onClick={() => setData((d: any) => ({ ...d, localizacaoTipo: 'gps' }))}
+              className={`flex-1 py-3 rounded-xl text-xs font-black uppercase transition-all flex items-center justify-center gap-2 ${data.localizacaoTipo === 'gps' ? 'bg-white shadow-sm text-[#2E4036]' : 'opacity-40'}`}
+            >
+              <MapPin size={14} /> GPS Real
+            </button>
+            <button 
+              onClick={() => setData((d: any) => ({ ...d, localizacaoTipo: 'manual' }))}
+              className={`flex-1 py-3 rounded-xl text-xs font-black uppercase transition-all flex items-center justify-center gap-2 ${data.localizacaoTipo === 'manual' ? 'bg-white shadow-sm text-[#2E4036]' : 'opacity-40'}`}
+            >
+              <PenLine size={14} /> Manual
+            </button>
+         </div>
+
+        {data.localizacaoTipo === 'gps' ? (
+          <div className="p-6 rounded-3xl bg-[#06D6A0]/5 border border-[#06D6A0]/20 text-center">
+            {isFetchingGps ? (
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 size={24} className="animate-spin text-[#06D6A0]" />
+                <p className="text-xs font-bold text-[#2E4036]/60">Verificando sua posição...</p>
+              </div>
+            ) : data.gpsLat ? (
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-10 h-10 rounded-full bg-[#06D6A0] text-white flex items-center justify-center shadow-lg animate-bounce">
+                  <Navigation size={20} fill="currentColor" />
+                </div>
+                <p className="text-[10px] font-black uppercase text-[#06D6A0] tracking-widest">Localização Validada</p>
+                <p className="text-xs font-medium opacity-60 leading-tight">{data.gpsEndereco}</p>
+                <button onClick={fetchGPS} className="text-[10px] font-bold underline mt-2 opacity-40">Atualizar GPS</button>
+              </div>
+            ) : (
+               <button onClick={fetchGPS} className="w-full py-4 rounded-2xl bg-[#06D6A0] text-white font-bold text-sm shadow-lg">Ativar GPS do Celular</button>
+            )}
+            {gpsError && <p className="text-[10px] text-red-500 font-bold mt-2">{gpsError}</p>}
+          </div>
+        ) : (
+          <input 
+            value={data.enderecoManual} 
+            onChange={e => setData((d: any) => ({ ...d, enderecoManual: e.target.value }))} 
+            placeholder="Ex: Av. Paulista, 1000 - Perto do MASP" 
+            className="w-full p-4 rounded-2xl bg-[#F2F0E9] outline-none text-sm font-medium focus:ring-2 focus:ring-[#06D6A0]/30 transition-all shadow-inner" 
+          />
+        )}
+      </Field>
+
+      <Field label="Responsável atual">
          <div className="grid grid-cols-3 gap-2">
             {['comigo', 'ong', 'rua'].map(type => (
                <button key={type} onClick={() => setData((d: any) => ({ ...d, abrigoTipo: type as any }))} className="py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all" style={{ backgroundColor: data.abrigoTipo === type ? THEME.primary : THEME.bg, color: data.abrigoTipo === type ? 'white' : 'inherit' }}>{type === 'comigo' ? 'Comigo' : type === 'ong' ? 'Na ONG' : 'Na Rua'}</button>
             ))}
          </div>
       </Field>
-      <Field label="Endereço / Referência">
-        <input value={data.enderecoManual} onChange={e => setData((d: any) => ({ ...d, enderecoManual: cap(e.target.value) }))} placeholder="Ex: Av. Paulista, 1000 - Perto do MASP" className="w-full p-4 rounded-2xl outline-none text-sm font-medium" style={{ backgroundColor: THEME.bg }} />
-      </Field>
-      <div className="flex gap-3">
-        <button onClick={onBack} className="px-6 py-4 rounded-full font-bold text-sm bg-gray-100">Voltar</button>
-        <button onClick={onNext} className="flex-1 py-4 rounded-full text-white font-bold shadow-lg flex items-center justify-center gap-2" style={{ backgroundColor: THEME.primary }} disabled={isSubmitting}>
-          {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : 'Finalizar Reporte'}
+
+      <div className="flex gap-3 pt-4">
+        <button onClick={onBack} className="px-6 py-4 rounded-full font-bold text-sm bg-[#F2F0E9] hover:bg-[#E8E4DD] transition-colors">Voltar</button>
+        <button 
+          onClick={onNext} 
+          className="flex-1 py-4 rounded-full text-white font-bold shadow-lg flex items-center justify-center gap-2 transition-transform hover:scale-105 active:scale-95" 
+          style={{ backgroundColor: THEME.primary }} 
+          disabled={isSubmitting || (data.localizacaoTipo === 'gps' && !data.gpsLat && !data.enderecoManual)}
+        >
+          {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : 'Finalizar Reporte Heroico'}
         </button>
       </div>
     </div>
@@ -305,7 +393,12 @@ const STEP_TITLES = ['Quem você encontrou?', 'Fotos e Detalhes', 'Onde ele est�
 export function FoundPetModal({ isOpen, onClose, onSuccess, userId }: FoundPetModalProps) {
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [data, setData] = useState<FormData>({ nome: '', especie: '', raca: '', racaNaoSei: false, idade: '', sexo: '', cores: [], detalhesColeira: '', fotos: [], comportamento: '', localizacaoTipo: 'gps', enderecoManual: '', gpsLng: null, gpsEndereco: '', abrigoTipo: 'comigo', abrigoDetalhes: '' });
+  const [data, setData] = useState<FormData>({ 
+    nome: '', especie: '', raca: '', racaNaoSei: false, idade: '', sexo: '', cores: [], 
+    detalhesColeira: '', fotos: [], comportamento: '', localizacaoTipo: 'gps', 
+    enderecoManual: '', gpsLat: null, gpsLng: null, gpsEndereco: '', 
+    abrigoTipo: 'comigo', abrigoDetalhes: '' 
+  });
 
   const handleNext = async () => {
     if (step === 2) {
@@ -318,8 +411,12 @@ export function FoundPetModal({ isOpen, onClose, onSuccess, userId }: FoundPetMo
           name: rest.nome || 'Pet Encontrado', 
           breed: rest.raca, 
           species: rest.especie as any, 
-          description: rest.comportamento, 
-          location: { lat: 0, lng: 0, address: rest.enderecoManual }, 
+          description: rest.comportamento,
+          location: { 
+            lat: rest.gpsLat || 0, 
+            lng: rest.gpsLng || 0, 
+            address: rest.enderecoManual 
+          }, 
           status: 'active' 
         }, fotos);
         if (onSuccess) onSuccess();
