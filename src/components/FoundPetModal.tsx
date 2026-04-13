@@ -309,7 +309,17 @@ export function FoundPetModal({ isOpen, onClose }: FoundPetModalProps) {
     if (step === 2) {
       setIsSubmitting(true);
       try {
-        await PetService.create({ owner_id: 'hero-id-mock', type: 'found', name: data.nome || 'Pet Encontrado', breed: data.raca, species: data.especie as any, description: data.comportamento, images: [], location: { lat: 0, lng: 0, address: data.enderecoManual }, status: 'active' });
+        const { fotos, ...rest } = data;
+        await PetService.create({ 
+          owner_id: 'hero-id-mock', 
+          type: 'found', 
+          name: rest.nome || 'Pet Encontrado', 
+          breed: rest.raca, 
+          species: rest.especie as any, 
+          description: rest.comportamento, 
+          location: { lat: 0, lng: 0, address: rest.enderecoManual }, 
+          status: 'active' 
+        }, fotos);
         setStep(3);
       } catch { alert('Erro ao salvar reporte.'); } finally { setIsSubmitting(false); }
     } else { setStep(step + 1); }

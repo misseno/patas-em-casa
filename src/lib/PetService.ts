@@ -5,15 +5,40 @@ import { supabase, type Pet } from './supabase';
  * Centraliza as chamadas ao Supabase para facilitar manutenção e Mock fallback
  */
 
-const IS_MOCK_MODE = true; // Altere para false quando configurar as chaves do Supabase
+const IS_MOCK_MODE = false;
 
 export const PetService = {
+  // FAZER UPLOAD DE IMAGENS
+  async uploadImages(files: File[]): Promise<string[]> {
+    const urls: string[] = [];
+    
+    for (const file of files) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `pets/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('pet-images')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error('Erro no upload:', uploadError);
+        continue;
+      }
+
+      const { data } = supabase.storage
+        .from('pet-images')
+        .getPublicUrl(filePath);
+
+      urls.push(data.publicUrl);
+    }
+    
+    return urls;
+  },
+
   // BUSCAR TODOS OS PETS
   async getAll(): Promise<Pet[]> {
-    if (IS_MOCK_MODE) {
-       // Fallback para o MOCK que já temos se não houver backend
-       return []; // O App.tsx cuidará disso por enquanto
-    }
+    if (IS_MOCK_MODE) return [];
     
     const { data, error } = await supabase
       .from('pets')
@@ -25,15 +50,22 @@ export const PetService = {
   },
 
   // CRIAR UM NOVO REPORTE (PERDI/ACHEI)
-  async create(pet: Omit<Pet, 'id' | 'created_at'>) {
+  async create(petData: Omit<Pet, 'id' | 'created_at' | 'images'>, files: File[]) {
     if (IS_MOCK_MODE) {
-      console.log('Simulação de Banco: Salvando Pet...', pet);
+      console.log('Simulação de Banco: Salvando Pet...', petData);
       return { success: true };
     }
 
+    // 1. Upload das Imagens Primeiro
+    const imageUrls = await this.uploadImages(files);
+
+    // 2. Salvar no Banco
     const { data, error } = await supabase
       .from('pets')
-      .insert([pet])
+      .insert([{
+        ...petData,
+        images: imageUrls
+      }])
       .select();
 
     if (error) throw error;
@@ -41,8 +73,7 @@ export const PetService = {
   },
 
   // BUSCA POR SIMILARIDADE (IA)
-  async findMatches(petId: string) {
-    // Aqui chamaremos a Edge Function do Supabase no futuro
+  async findMatches(_petId: string) {
     return [];
   }
 };

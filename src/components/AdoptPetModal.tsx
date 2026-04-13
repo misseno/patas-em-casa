@@ -292,17 +292,17 @@ function FlowDonate({ setFlow, onClose }: { setFlow: (f: FlowType) => void; onCl
   const handlePublish = async () => {
     setIsSubmitting(true);
     try {
+      const { fotos, ...rest } = data;
       await PetService.create({
         owner_id: 'donor-id-mock',
         type: 'adopt',
-        name: data.nome,
-        breed: data.raca,
-        species: data.especie as any,
-        description: data.historia,
-        images: [],
+        name: rest.nome,
+        breed: rest.raca,
+        species: rest.especie as any,
+        description: rest.historia,
         location: { lat: 0, lng: 0, address: 'Doador' },
         status: 'active'
-      });
+      }, fotos);
       setStep(3);
     } catch (err) {
       alert('Erro ao publicar perfil.');

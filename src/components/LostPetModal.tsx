@@ -676,21 +676,21 @@ export function LostPetModal({ isOpen, onClose }: LostPetModalProps) {
     if (step === 2) {
       setIsSubmitting(true);
       try {
+        const { fotos, ...rest } = data;
         await PetService.create({
           owner_id: 'user-id-mock',
           type: 'lost',
-          name: data.nome,
-          breed: data.raca,
-          species: data.especie as any,
-          description: data.descEmocional,
-          images: [],
+          name: rest.nome,
+          breed: rest.raca,
+          species: rest.especie as any,
+          description: rest.descEmocional,
           location: {
-            lat: data.gpsLat || 0,
-            lng: data.gpsLng || 0,
-            address: data.gpsEndereco || data.enderecoManual
+            lat: rest.gpsLat || 0,
+            lng: rest.gpsLng || 0,
+            address: rest.gpsEndereco || rest.enderecoManual
           },
           status: 'active'
-        });
+        }, fotos);
         setStep(3);
       } catch (err) {
         alert('Erro ao salvar no banco.');

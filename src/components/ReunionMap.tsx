@@ -149,7 +149,7 @@ export const ReunionMap: React.FC<ReunionMapProps> = ({ pet, onClose }) => {
         </div>
 
         {/* COMMUNITY VIBE (FLOATING) */}
-        <div className="absolute bottom-10 right-10 flex flex-col items-center">
+        <div className="absolute bottom-10 right-10 flex flex-col items-center z-[1000]">
            <div className="relative h-[400px] w-48 pointer-events-none flex flex-col justify-end items-center pb-20">
              <AnimatePresence>
                {hearts.map(h => (
@@ -210,7 +210,7 @@ export const ReunionMap: React.FC<ReunionMapProps> = ({ pet, onClose }) => {
         </div>
 
         {/* NAVIGATION OVERLAY */}
-        <div className="absolute top-10 left-10 w-[380px]">
+        <div className="absolute top-10 left-10 w-[380px] z-[1000]">
            <motion.div 
              initial={{ x: -100, opacity: 0 }}
              animate={{ x: 0, opacity: 1 }}
