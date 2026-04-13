@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, ArrowRight, ArrowLeft, Camera, MapPin, Navigation,
   PenLine, Share2, CheckCircle2, AlertCircle, Loader2
@@ -142,7 +143,9 @@ const Step1 = React.memo(Step1Base);
 function Step2Base({ data, setData, onNext, onBack }: any) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isAiScanning, setIsAiScanning] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [showSourceMenu, setShowSourceMenu] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []).slice(0, 6 - data.fotos.length);
@@ -167,7 +170,18 @@ function Step2Base({ data, setData, onNext, onBack }: any) {
             <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden"><img src={URL.createObjectURL(file)} className="w-full h-full object-cover" /><button onClick={() => setData((d: any) => ({ ...d, fotos: d.fotos.filter((_: any, i: any) => i !== idx) }))} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1"><X size={10} /></button></div>
           ))}
           {data.fotos.length < 6 && (
-            <button onClick={() => inputRef.current?.click()} className="aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-1 relative overflow-hidden" style={{ borderColor: `${THEME.primary}40` }}>
+            <button 
+              onClick={() => {
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                if (isMobile) {
+                  setShowSourceMenu(true);
+                } else {
+                  galleryInputRef.current?.click();
+                }
+              }} 
+              className="aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-1 relative overflow-hidden" 
+              style={{ borderColor: `${THEME.primary}40` }}
+            >
               {isAiScanning ? (
                 <div className="absolute inset-0 bg-[#06D6A0]/10 flex flex-col items-center justify-center animate-pulse">
                    <div className="w-full h-0.5 bg-[#06D6A0] absolute top-0 animate-[scan_1.5s_infinite]" />
@@ -176,13 +190,60 @@ function Step2Base({ data, setData, onNext, onBack }: any) {
               ) : (
                 <>
                   <Camera size={22} />
-                  <span className="text-[10px] font-bold">Add</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">Adicionar</span>
                 </>
               )}
             </button>
           )}
         </div>
-        <input ref={inputRef} type="file" accept="image/*" multiple onChange={handleFiles} className="hidden" />
+
+        {/* Action Sheet de Fotos (Estilo Steve Jobs) */}
+        <AnimatePresence>
+          {showSourceMenu && (
+            <>
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowSourceMenu(false)}
+                className="fixed inset-0 z-[150] bg-black/20 backdrop-blur-sm"
+              />
+              <motion.div 
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="fixed bottom-0 left-0 right-0 z-[160] bg-white rounded-t-[2.5rem] p-8 pb-12 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
+              >
+                <div className="w-12 h-1.5 bg-black/5 rounded-full mx-auto mb-8" />
+                <h4 className="text-xl font-black text-center mb-8 text-[#2E4036]">Como deseja adicionar?</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <button 
+                    onClick={() => { cameraInputRef.current?.click(); setShowSourceMenu(false); }}
+                    className="flex flex-col items-center gap-4 p-6 rounded-3xl bg-[#F2F0E9] transition-all active:scale-95"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-[#06D6A0] text-white flex items-center justify-center">
+                      <Camera size={24} />
+                    </div>
+                    <span className="text-sm font-bold">Tirar Foto</span>
+                  </button>
+                  <button 
+                    onClick={() => { galleryInputRef.current?.click(); setShowSourceMenu(false); }}
+                    className="flex flex-col items-center gap-4 p-6 rounded-3xl bg-[#F2F0E9] transition-all active:scale-95"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-[#2E4036] text-white flex items-center justify-center">
+                      <Share2 size={24} className="rotate-90" />
+                    </div>
+                    <span className="text-sm font-bold">Galeria</span>
+                  </button>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFiles} className="hidden" />
+        <input ref={galleryInputRef} type="file" accept="image/*" multiple onChange={handleFiles} className="hidden" />
       </div>
       <Field label="Descreva como ele está">
         <textarea value={data.comportamento} onChange={e => setData((d: any) => ({ ...d, comportamento: cap(e.target.value) }))} rows={4} placeholder="Ex: Está assustado mas é dócil. Tem uma mancha branca no peito..." className="w-full p-4 rounded-2xl outline-none text-sm font-medium resize-none shadow-inner" style={{ backgroundColor: THEME.bg }} />

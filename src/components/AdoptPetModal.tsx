@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, ArrowRight, ArrowLeft, Camera, Heart, Search, CheckCircle2, AlertCircle, Syringe, Sparkles, Loader2
 } from 'lucide-react';
@@ -159,7 +160,10 @@ const DonateStep2 = React.memo(({ data, setData, setStep, toggleTemp, THEME }: a
   </div>
 ));
 
-const DonateStep3 = React.memo(({ data, setData, setStep, handlePublish, isSubmitting, inputRef, THEME }: any) => {
+const DonateStep3 = React.memo(({ data, setData, setStep, handlePublish, isSubmitting, THEME }: any) => {
+  const [showSourceMenu, setShowSourceMenu] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const error = (!data.historia || data.fotos.length === 0) ? 'Adicione fotos e uma história' : '';
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []).slice(0, 3 - data.fotos.length);
@@ -177,11 +181,70 @@ const DonateStep3 = React.memo(({ data, setData, setStep, handlePublish, isSubmi
             </div>
           ))}
           {data.fotos.length < 3 && (
-            <button onClick={() => inputRef.current?.click()} className="aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-1" style={{ borderColor: `${THEME.primary}40` }}>
+            <button 
+              onClick={() => {
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                if (isMobile) {
+                  setShowSourceMenu(true);
+                } else {
+                  galleryInputRef.current?.click();
+                }
+              }} 
+              className="aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-1" 
+              style={{ borderColor: `${THEME.primary}40` }}
+            >
               <Camera size={20} style={{ color: THEME.primary }} />
+              <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">Adicionar</span>
             </button>
           )}
-          <input ref={inputRef} type="file" accept="image/*" multiple onChange={handleFiles} className="hidden" />
+
+          {/* Action Sheet de Fotos (Estilo Steve Jobs) */}
+          <AnimatePresence>
+            {showSourceMenu && (
+              <>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setShowSourceMenu(false)}
+                  className="fixed inset-0 z-[150] bg-black/20 backdrop-blur-sm"
+                />
+                <motion.div 
+                  initial={{ y: "100%" }}
+                  animate={{ y: 0 }}
+                  exit={{ y: "100%" }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                  className="fixed bottom-0 left-0 right-0 z-[160] bg-white rounded-t-[2.5rem] p-8 pb-12 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
+                >
+                  <div className="w-12 h-1.5 bg-black/5 rounded-full mx-auto mb-8" />
+                  <h4 className="text-xl font-black text-center mb-8 text-[#2E4036]">Como deseja adicionar?</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button 
+                      onClick={() => { cameraInputRef.current?.click(); setShowSourceMenu(false); }}
+                      className="flex flex-col items-center gap-4 p-6 rounded-3xl bg-[#F2F0E9] transition-all active:scale-95"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-[#CC5833] text-white flex items-center justify-center">
+                        <Camera size={24} />
+                      </div>
+                      <span className="text-sm font-bold">Tirar Foto</span>
+                    </button>
+                    <button 
+                      onClick={() => { galleryInputRef.current?.click(); setShowSourceMenu(false); }}
+                      className="flex flex-col items-center gap-4 p-6 rounded-3xl bg-[#F2F0E9] transition-all active:scale-95"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-[#2E4036] text-white flex items-center justify-center">
+                        <Share2 size={24} className="rotate-90" />
+                      </div>
+                      <span className="text-sm font-bold">Galeria</span>
+                    </button>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+
+          <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFiles} className="hidden" />
+          <input ref={galleryInputRef} type="file" accept="image/*" multiple onChange={handleFiles} className="hidden" />
         </div>
       </div>
       <Field label="Conheça a Minha História *">

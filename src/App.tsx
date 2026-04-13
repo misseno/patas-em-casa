@@ -309,18 +309,36 @@ const App: React.FC = () => {
               Onde a espera <br />
               <span className="italic font-serif font-light text-[#CC5833]">Encontra o abraço.</span>
             </h1>
-            <div className="flex flex-col gap-4 items-center justify-center">
-              <button onClick={() => setShowLostModal(true)} className="w-full md:w-auto px-12 py-6 rounded-[2.5rem] bg-[#2E4036] text-white font-bold text-lg flex items-center justify-center gap-3 shadow-2xl hover:scale-105 transition-transform">
-                Perdi meu Pet <ArrowRight size={20} />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-4xl mx-auto px-4 mt-8">
+              <button 
+                onClick={() => setShowLostModal(true)} 
+                className="group flex flex-col items-center justify-center gap-4 p-8 rounded-[3rem] bg-[#2E4036] text-white transition-all hover:scale-[1.02] active:scale-95 shadow-2xl"
+              >
+                <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#CC5833] transition-colors">
+                  <ArrowRight size={24} />
+                </div>
+                <span className="text-xl font-black tracking-tight">Perdi meu Pet</span>
               </button>
-              <div className="flex flex-wrap gap-4 justify-center">
-                <button onClick={() => setShowFoundModal(true)} className="px-10 py-5 rounded-[2rem] border-2 border-black/5 font-bold text-base hover:bg-white transition-all bg-white/50">
-                  Encontrei um Pet
-                </button>
-                <button onClick={() => setShowAdoptModal(true)} className="px-10 py-5 rounded-[2rem] border-2 border-[#CC5833]/20 text-[#CC5833] font-bold text-base hover:bg-[#CC5833] hover:text-white transition-all bg-white/50">
-                  Doar / Adotar
-                </button>
-              </div>
+
+              <button 
+                onClick={() => setShowFoundModal(true)} 
+                className="group flex flex-col items-center justify-center gap-4 p-8 rounded-[3rem] bg-white border-2 border-black/5 text-[#2E4036] transition-all hover:scale-[1.02] active:scale-95 shadow-xl"
+              >
+                <div className="w-14 h-14 rounded-full bg-[#F2F0E9] flex items-center justify-center group-hover:bg-[#06D6A0]/20 transition-colors">
+                  <Camera size={24} />
+                </div>
+                <span className="text-xl font-black tracking-tight">Encontrei um Pet</span>
+              </button>
+
+              <button 
+                onClick={() => setShowAdoptModal(true)} 
+                className="group flex flex-col items-center justify-center gap-4 p-8 rounded-[3rem] bg-white border-2 border-[#CC5833]/20 text-[#CC5833] transition-all hover:scale-[1.02] active:scale-95 shadow-xl"
+              >
+                <div className="w-14 h-14 rounded-full bg-[#CC5833]/10 flex items-center justify-center group-hover:bg-[#CC5833] group-hover:text-white transition-colors">
+                  <Heart size={24} />
+                </div>
+                <span className="text-xl font-black tracking-tight">Quero Adotar</span>
+              </button>
             </div>
           </header>
         )}
