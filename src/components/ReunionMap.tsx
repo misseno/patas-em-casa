@@ -33,6 +33,7 @@ interface ReunionMapProps {
 
 export const ReunionMap: React.FC<ReunionMapProps> = ({ pet, onClose }) => {
   const [showPath, setShowPath] = useState(false);
+  const [routeCoords, setRouteCoords] = useState<[number, number][]>([]);
   const [hearts, setHearts] = useState<{ id: number; x: number }[]>([]);
   const [communityCount, setCommunityCount] = useState(124);
   const [messages, setMessages] = useState<string[]>([]);
@@ -48,7 +49,29 @@ export const ReunionMap: React.FC<ReunionMapProps> = ({ pet, onClose }) => {
     "Estou emocionado!", "O amor vence tudo."
   ], []);
 
+  // Buscar rota real usando as ruas (OSRM API - Gratuito)
+  const fetchRoute = async () => {
+    try {
+      const response = await fetch(
+        `https://router.project-osrm.org/route/v1/driving/${userPos[1]},${userPos[0]};${petPos[1]},${petPos[0]}?overview=full&geometries=geojson`
+      );
+      const data = await response.json();
+      if (data.routes && data.routes[0]) {
+        // Converter de [lng, lat] para [lat, lng] (Leaflet padrão)
+        const coords = data.routes[0].geometry.coordinates.map((c: any) => [c[1], c[0]]);
+        setRouteCoords(coords);
+        setShowPath(true);
+      }
+    } catch (error) {
+      console.error("Erro ao traçar rota real:", error);
+      // Fallback para linha reta se a API falhar
+      setRouteCoords([userPos, petPos]);
+      setShowPath(true);
+    }
+  };
+
   useEffect(() => {
+    fetchRoute();
     const heartInterval = setInterval(() => {
       setHearts(prev => [...prev.slice(-20), { id: Date.now(), x: Math.random() * 100 }]);
       setCommunityCount(c => c + (Math.random() > 0.8 ? 1 : 0));
@@ -99,7 +122,16 @@ export const ReunionMap: React.FC<ReunionMapProps> = ({ pet, onClose }) => {
       <div className="relative flex-1 h-full bg-[#E5E2D9]">
         <MapContainer center={centerPos} zoom={15} zoomControl={false} className="absolute inset-0 w-full h-full">
           <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-          {showPath && <Polyline positions={[userPos, petPos]} color="#CC5833" weight={6} dashArray="10, 15" opacity={0.6} />}
+          {showPath && routeCoords.length > 0 && (
+            <Polyline 
+              positions={routeCoords} 
+              color="#CC5833" 
+              weight={6} 
+              dashArray="1, 12"
+              lineCap="round"
+              opacity={0.8} 
+            />
+          )}
           <Marker position={userPos} icon={userIcon} /><Marker position={petPos} icon={petIcon} />
         </MapContainer>
 
