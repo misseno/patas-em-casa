@@ -30,6 +30,7 @@ interface FormData {
 interface LostPetModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
 const CORES_OPCOES = ['Preto', 'Branco', 'Marrom', 'Amarelo', 'Caramelo', 'Cinza', 'Malhado', 'Ruivo'];
@@ -663,7 +664,7 @@ const STEP_TITLES = [
 ];
 
 // --- COMPONENTE PRINCIPAL ---
-export function LostPetModal({ isOpen, onClose }: LostPetModalProps) {
+export function LostPetModal({ isOpen, onClose, onSuccess }: LostPetModalProps) {
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [data, setData] = useState<FormData>({
@@ -691,6 +692,7 @@ export function LostPetModal({ isOpen, onClose }: LostPetModalProps) {
           },
           status: 'active'
         }, fotos);
+        if (onSuccess) onSuccess();
         setStep(3);
       } catch (err) {
         alert('Erro ao salvar no banco.');

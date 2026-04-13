@@ -104,35 +104,35 @@ const App: React.FC = () => {
   }, []);
 
   // Carregar dados reais do Supabase
-  useEffect(() => {
-    const loadPets = async () => {
-      try {
-        const data = await PetService.getAll();
-        if (data && data.length > 0) {
-          const mapped = data.map((p: any) => ({
-            id: p.id,
-            name: p.name,
-            breed: p.breed,
-            status: p.type === 'lost' ? 'lost' : p.type === 'found' ? 'found' : 'adopt',
-            loc: p.location.address,
-            time: 'Agora', // Idealmente calcular tempo relativo
-            img: p.images[0] || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80',
-            desc: p.description,
-            especie: p.species,
-            porte: 'Médio' // Adicionar ao schema se necessário
-          }));
-          setPets(mapped);
-        }
-      } catch (err) {
-        console.error('Erro ao carregar do Supabase:', err);
+  const loadPets = async () => {
+    try {
+      const data = await PetService.getAll();
+      if (data && data.length > 0) {
+        const mapped = data.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          breed: p.breed,
+          status: p.type === 'lost' ? 'lost' : p.type === 'found' ? 'found' : 'adopt',
+          loc: p.location?.address || 'Localização não informada',
+          time: 'Recente', 
+          img: p.images?.[0] || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80',
+          desc: p.description,
+          especie: p.species,
+          porte: 'Médio' 
+        }));
+        setPets(mapped);
       }
-    };
+    } catch (err) {
+      console.error('Erro ao carregar do Supabase:', err);
+    }
+  };
+
+  useEffect(() => {
     loadPets();
   }, []);
 
   // Monitorar Autenticação Real do Supabase
   useEffect(() => {
-    // 1. Verificar sessão atual no carregamento
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         const user = session.user;
@@ -141,18 +141,15 @@ const App: React.FC = () => {
           full_name: user.user_metadata.full_name || 'Herói Anônimo',
           email: user.email,
           avatar_url: user.user_metadata.avatar_url,
-          points: 150 // Base inicial
+          points: 150 
         });
         setHasPassedGate(true);
       }
     });
 
-    // 2. Escutar mudanças (Login, Logout, Redirect do Google)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         const user = session.user;
-        const isNewUser = _event === 'SIGNED_IN' && !currentUser;
-        
         setCurrentUser({
           id: user.id,
           full_name: user.user_metadata.full_name || 'Herói Anônimo',
@@ -160,14 +157,6 @@ const App: React.FC = () => {
           avatar_url: user.user_metadata.avatar_url,
           points: 150
         });
-
-        if (isNewUser) {
-           addNotification({ 
-            title: `Seja bem-vindo!`, 
-            message: 'Estamos preparando seu perfil de herói.', 
-            type: 'success' 
-          });
-        }
       } else {
         setCurrentUser(null);
       }
@@ -177,6 +166,10 @@ const App: React.FC = () => {
   }, []);
 
   // --- HANDLERS ---
+  const handleActionSuccess = () => {
+    loadPets(); // Recarrega a vitrine após qualquer ação (Cadastro, Resgate, etc)
+  };
+
   const handleLoginSuccess = (user: any) => {
     setCurrentUser(user);
     setShowAuth(false);
@@ -299,9 +292,9 @@ const App: React.FC = () => {
         onLogin={() => setShowAuth(true)} 
         onGuest={handleGuestEntry}
       />
-      <LostPetModal isOpen={showLostModal} onClose={() => setShowLostModal(false)} />
-      <FoundPetModal isOpen={showFoundModal} onClose={() => setShowFoundModal(false)} />
-      <AdoptPetModal isOpen={showAdoptModal} onClose={() => setShowAdoptModal(false)} />
+      <LostPetModal isOpen={showLostModal} onClose={() => setShowLostModal(false)} onSuccess={handleActionSuccess} />
+      <FoundPetModal isOpen={showFoundModal} onClose={() => setShowFoundModal(false)} onSuccess={handleActionSuccess} />
+      <AdoptPetModal isOpen={showAdoptModal} onClose={() => setShowAdoptModal(false)} onSuccess={handleActionSuccess} />
 
       <AnimatePresence>
         {showReunionMap && selectedPet && (
@@ -474,11 +467,11 @@ const App: React.FC = () => {
                   <div key={pet.id} onClick={() => setSelectedPet(pet)} className="group bg-white rounded-[3rem] overflow-hidden border border-black/5 cursor-pointer shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 relative flex flex-col">
                     
                     {/* Pílulas de Status */}
-                    <div className="absolute top-5 left-5 z-10 flex flex-col gap-2">
-                      {pet.status === 'lost' && <span className="px-3 py-1.5 bg-red-500 text-white text-[9px] font-black tracking-widest uppercase rounded-full shadow-lg">Perdido</span>}
-                      {pet.status === 'found' && <span className="px-3 py-1.5 bg-[#06D6A0] text-[#2E4036] text-[9px] font-black tracking-widest uppercase rounded-full shadow-lg">Encontrado</span>}
-                      {pet.status === 'adopt' && <span className="px-3 py-1.5 bg-[#CC5833] text-white text-[9px] font-black tracking-widest uppercase rounded-full shadow-lg">Adoção</span>}
-                      <span className="px-3 py-1 bg-white/90 backdrop-blur text-[#2E4036] text-[9px] font-bold rounded-full shadow-sm w-fit">{pet.time}</span>
+                    <div className="absolute top-5 left-5 z-10 flex flex-col gap-1.5 items-start">
+                      {pet.status === 'lost' && <span className="px-3 py-1 bg-[#EF4444] text-white text-[9px] font-black tracking-widest uppercase rounded-lg shadow-xl">Perdido</span>}
+                      {pet.status === 'found' && <span className="px-3 py-1 bg-[#06D6A0] text-[#2E4036] text-[9px] font-black tracking-widest uppercase rounded-lg shadow-xl">Encontrado</span>}
+                      {pet.status === 'adopt' && <span className="px-3 py-1 bg-[#CC5833] text-white text-[9px] font-black tracking-widest uppercase rounded-lg shadow-xl">Adoção</span>}
+                      <span className="px-2 py-1 bg-white/95 backdrop-blur text-[#2E4036]/60 text-[8px] font-black uppercase tracking-tighter rounded-md shadow-sm border border-black/5">Há {pet.time}</span>
                     </div>
 
                     <div className="h-72 overflow-hidden relative">

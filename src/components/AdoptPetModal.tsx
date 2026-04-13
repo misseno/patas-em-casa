@@ -279,7 +279,7 @@ const DonateStep4 = React.memo(({ data, onClose, THEME }: any) => (
 // ==========================================
 // FLUXO: DOAR (CADASTRAR PET)
 // ==========================================
-function FlowDonate({ setFlow, onClose }: { setFlow: (f: FlowType) => void; onClose: () => void }) {
+function FlowDonate({ setFlow, onClose, onSuccess }: { setFlow: (f: FlowType) => void; onClose: () => void; onSuccess?: () => void }) {
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [data, setData] = useState<DonateFormData>({
@@ -303,6 +303,7 @@ function FlowDonate({ setFlow, onClose }: { setFlow: (f: FlowType) => void; onCl
         location: { lat: 0, lng: 0, address: 'Doador' },
         status: 'active'
       }, fotos);
+      if (onSuccess) onSuccess();
       setStep(3);
     } catch (err) {
       alert('Erro ao publicar perfil.');
@@ -442,7 +443,7 @@ function FlowAdopt({ setFlow, onClose }: { setFlow: (f: FlowType) => void; onClo
 // ==========================================
 // MODAL PRINCIPAL ROOT
 // ==========================================
-export function AdoptPetModal({ isOpen, onClose }: AdoptModalProps) {
+export function AdoptPetModal({ isOpen, onClose, onSuccess }: { isOpen: boolean; onClose: () => void; onSuccess?: () => void }) {
   const [flow, setFlow] = useState<FlowType>('none');
 
   const handleClose = () => {
@@ -501,7 +502,7 @@ export function AdoptPetModal({ isOpen, onClose }: AdoptModalProps) {
             </div>
           )}
 
-          {flow === 'donate' && <FlowDonate setFlow={setFlow} onClose={handleClose} />}
+          {flow === 'donate' && <FlowDonate setFlow={setFlow} onClose={handleClose} onSuccess={onSuccess} />}
           {flow === 'adopt' && <FlowAdopt setFlow={setFlow} onClose={handleClose} />}
         </div>
       </div>
